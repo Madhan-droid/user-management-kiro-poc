@@ -1,1 +1,0 @@
-"""User listing Lambda function."""

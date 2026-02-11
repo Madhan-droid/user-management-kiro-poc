@@ -1,1 +1,0 @@
-"""User registration Lambda function."""
