@@ -1,0 +1,3716 @@
+{
+ "Description": "User Management Service - Development Environment",
+ "Resources": {
+  "TablesUsersTable160FE13D": {
+   "Type": "AWS::DynamoDB::Table",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "PK",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "SK",
+      "AttributeType": "S"
+     }
+    ],
+    "BillingMode": "PAY_PER_REQUEST",
+    "KeySchema": [
+     {
+      "AttributeName": "PK",
+      "KeyType": "HASH"
+     },
+     {
+      "AttributeName": "SK",
+      "KeyType": "RANGE"
+     }
+    ],
+    "PointInTimeRecoverySpecification": {
+     "PointInTimeRecoveryEnabled": true
+    },
+    "Tags": [
+     {
+      "Key": "Domain",
+      "Value": "users"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Service",
+      "Value": "user-management"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Tables/UsersTable/Resource"
+   }
+  },
+  "TablesIdempotencyTable9CFEB1A0": {
+   "Type": "AWS::DynamoDB::Table",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "PK",
+      "AttributeType": "S"
+     }
+    ],
+    "BillingMode": "PAY_PER_REQUEST",
+    "KeySchema": [
+     {
+      "AttributeName": "PK",
+      "KeyType": "HASH"
+     }
+    ],
+    "PointInTimeRecoverySpecification": {
+     "PointInTimeRecoveryEnabled": true
+    },
+    "Tags": [
+     {
+      "Key": "Domain",
+      "Value": "users"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Service",
+      "Value": "user-management"
+     }
+    ],
+    "TimeToLiveSpecification": {
+     "AttributeName": "ttl",
+     "Enabled": true
+    }
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Tables/IdempotencyTable/Resource"
+   }
+  },
+  "EventBusUserAuditEventBus5BF0A895": {
+   "Type": "AWS::Events::EventBus",
+   "Properties": {
+    "Description": "Event bus for User Management Service audit events",
+    "Name": "user-management-audit-events",
+    "Tags": [
+     {
+      "Key": "Domain",
+      "Value": "users"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Service",
+      "Value": "user-management"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/EventBus/UserAuditEventBus/Resource"
+   }
+  },
+  "EventBusAuditLogGroup7EE4E105": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": "/aws/events/user-management/audit",
+    "RetentionInDays": 365,
+    "Tags": [
+     {
+      "Key": "Domain",
+      "Value": "users"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Service",
+      "Value": "user-management"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/EventBus/AuditLogGroup/Resource"
+   }
+  },
+  "EventBusAuditEventRule1460998B": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Description": "Route all user audit events to CloudWatch Logs",
+    "EventBusName": {
+     "Ref": "EventBusUserAuditEventBus5BF0A895"
+    },
+    "EventPattern": {
+     "detail-type": [
+      "UserAuditEvent"
+     ],
+     "source": [
+      "user-management.users"
+     ]
+    },
+    "Name": "user-audit-to-cloudwatch",
+    "State": "ENABLED",
+    "Tags": [
+     {
+      "Key": "Domain",
+      "Value": "users"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Service",
+      "Value": "user-management"
+     }
+    ],
+    "Targets": [
+     {
+      "Arn": {
+       "Fn::Join": [
+        "",
+        [
+         "arn:aws:logs:ap-south-1:320644769527:log-group:",
+         {
+          "Ref": "EventBusAuditLogGroup7EE4E105"
+         }
+        ]
+       ]
+      },
+      "Id": "Target0"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/EventBus/AuditEventRule/Resource"
+   }
+  },
+  "EventBusAuditEventArchive7CC5E09F": {
+   "Type": "AWS::Events::Archive",
+   "Properties": {
+    "ArchiveName": "user-management-audit-archive",
+    "Description": "Archive of all user management audit events for compliance",
+    "EventPattern": {
+     "detail-type": [
+      "UserAuditEvent"
+     ],
+     "source": [
+      "user-management.users"
+     ]
+    },
+    "KmsKeyIdentifier": "",
+    "RetentionDays": 365,
+    "SourceArn": {
+     "Fn::GetAtt": [
+      "EventBusUserAuditEventBus5BF0A895",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/EventBus/AuditEventArchive/Archive"
+   }
+  },
+  "EventsLogGroupPolicyusersdevstackEventBusAuditEventRuleDB65367DF5DFE758": {
+   "Type": "Custom::CloudwatchLogResourcePolicy",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "AWS679f53fac002430cb0da5b7982bd22872D164C4C",
+      "Arn"
+     ]
+    },
+    "Create": {
+     "Fn::Join": [
+      "",
+      [
+       "{\"service\":\"CloudWatchLogs\",\"action\":\"putResourcePolicy\",\"parameters\":{\"policyName\":\"usersdevstackEventsLogGroupPolicyusersdevstackEventBusAuditEventRuleDB65367D022AA13B\",\"policyDocument\":\"{\\\"Statement\\\":[{\\\"Action\\\":[\\\"logs:PutLogEvents\\\",\\\"logs:CreateLogStream\\\"],\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"Service\\\":\\\"events.amazonaws.com\\\"},\\\"Resource\\\":\\\"",
+       {
+        "Fn::GetAtt": [
+         "EventBusAuditLogGroup7EE4E105",
+         "Arn"
+        ]
+       },
+       "\\\"}],\\\"Version\\\":\\\"2012-10-17\\\"}\"},\"physicalResourceId\":{\"id\":\"EventsLogGroupPolicyusersdevstackEventBusAuditEventRuleDB65367D\"}}"
+      ]
+     ]
+    },
+    "Update": {
+     "Fn::Join": [
+      "",
+      [
+       "{\"service\":\"CloudWatchLogs\",\"action\":\"putResourcePolicy\",\"parameters\":{\"policyName\":\"usersdevstackEventsLogGroupPolicyusersdevstackEventBusAuditEventRuleDB65367D022AA13B\",\"policyDocument\":\"{\\\"Statement\\\":[{\\\"Action\\\":[\\\"logs:PutLogEvents\\\",\\\"logs:CreateLogStream\\\"],\\\"Effect\\\":\\\"Allow\\\",\\\"Principal\\\":{\\\"Service\\\":\\\"events.amazonaws.com\\\"},\\\"Resource\\\":\\\"",
+       {
+        "Fn::GetAtt": [
+         "EventBusAuditLogGroup7EE4E105",
+         "Arn"
+        ]
+       },
+       "\\\"}],\\\"Version\\\":\\\"2012-10-17\\\"}\"},\"physicalResourceId\":{\"id\":\"EventsLogGroupPolicyusersdevstackEventBusAuditEventRuleDB65367D\"}}"
+      ]
+     ]
+    },
+    "Delete": "{\"service\":\"CloudWatchLogs\",\"action\":\"deleteResourcePolicy\",\"parameters\":{\"policyName\":\"usersdevstackEventsLogGroupPolicyusersdevstackEventBusAuditEventRuleDB65367D022AA13B\"},\"ignoreErrorCodesMatching\":\"ResourceNotFoundException\"}",
+    "InstallLatestAwsSdk": false
+   },
+   "DependsOn": [
+    "EventsLogGroupPolicyusersdevstackEventBusAuditEventRuleDB65367DCustomResourcePolicyB6D885A3"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/EventsLogGroupPolicyusersdevstackEventBusAuditEventRuleDB65367D/Resource/Default"
+   }
+  },
+  "EventsLogGroupPolicyusersdevstackEventBusAuditEventRuleDB65367DCustomResourcePolicyB6D885A3": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "logs:DeleteResourcePolicy",
+        "logs:PutResourcePolicy"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "EventsLogGroupPolicyusersdevstackEventBusAuditEventRuleDB65367DCustomResourcePolicyB6D885A3",
+    "Roles": [
+     {
+      "Ref": "AWS679f53fac002430cb0da5b7982bd2287ServiceRoleC1EA0FF2"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/EventsLogGroupPolicyusersdevstackEventBusAuditEventRuleDB65367D/CustomResourcePolicy/Resource"
+   }
+  },
+  "AWS679f53fac002430cb0da5b7982bd2287ServiceRoleC1EA0FF2": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Domain",
+      "Value": "users"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Service",
+      "Value": "user-management"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/AWS679f53fac002430cb0da5b7982bd2287/ServiceRole/Resource"
+   }
+  },
+  "AWS679f53fac002430cb0da5b7982bd22872D164C4C": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-320644769527-ap-south-1",
+     "S3Key": "bc8ef58951f4c88e641dd23090e9d2e2e61c7530a07960e767522941e959b625.zip"
+    },
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "AWS679f53fac002430cb0da5b7982bd2287ServiceRoleC1EA0FF2",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs22.x",
+    "Tags": [
+     {
+      "Key": "Domain",
+      "Value": "users"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Service",
+      "Value": "user-management"
+     }
+    ],
+    "Timeout": 120
+   },
+   "DependsOn": [
+    "AWS679f53fac002430cb0da5b7982bd2287ServiceRoleC1EA0FF2"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/AWS679f53fac002430cb0da5b7982bd2287/Resource",
+    "aws:asset:path": "asset.bc8ef58951f4c88e641dd23090e9d2e2e61c7530a07960e767522941e959b625",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "LambdasDependenciesLayer05B94269": {
+   "Type": "AWS::Lambda::LayerVersion",
+   "Properties": {
+    "CompatibleRuntimes": [
+     "python3.11"
+    ],
+    "Content": {
+     "S3Bucket": "cdk-hnb659fds-assets-320644769527-ap-south-1",
+     "S3Key": "381e506b5923cad5c8a90559c5b32848b9fe6d9fcd08ef5b56831d9da4e4d7ba.zip"
+    },
+    "Description": "Python dependencies: python-ulid"
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Lambdas/DependenciesLayer/Resource",
+    "aws:asset:path": "asset.381e506b5923cad5c8a90559c5b32848b9fe6d9fcd08ef5b56831d9da4e4d7ba",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Content"
+   }
+  },
+  "LambdasRegisterLambdaServiceRoleBD6137F5": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Domain",
+      "Value": "users"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Service",
+      "Value": "user-management"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Lambdas/RegisterLambda/ServiceRole/Resource"
+   }
+  },
+  "LambdasRegisterLambdaServiceRoleDefaultPolicy408E419F": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "xray:PutTelemetryRecords",
+        "xray:PutTraceSegments"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:PutItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:UpdateItem"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "TablesIdempotencyTable9CFEB1A0",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::GetAtt": [
+          "TablesUsersTable160FE13D",
+          "Arn"
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "events:PutEvents",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "EventBusUserAuditEventBus5BF0A895",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "LambdasRegisterLambdaServiceRoleDefaultPolicy408E419F",
+    "Roles": [
+     {
+      "Ref": "LambdasRegisterLambdaServiceRoleBD6137F5"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Lambdas/RegisterLambda/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "LambdasRegisterLambda70BC60D5": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-320644769527-ap-south-1",
+     "S3Key": "e82320397c63e13a71517a8ade7b9e179639420f2a8f69943eaf557bb12a360d.zip"
+    },
+    "Description": "User registration - creates new users with email uniqueness validation",
+    "Environment": {
+     "Variables": {
+      "USERS_TABLE_NAME": {
+       "Ref": "TablesUsersTable160FE13D"
+      },
+      "IDEMPOTENCY_TABLE_NAME": {
+       "Ref": "TablesIdempotencyTable9CFEB1A0"
+      },
+      "EVENT_BUS_NAME": {
+       "Ref": "EventBusUserAuditEventBus5BF0A895"
+      }
+     }
+    },
+    "FunctionName": "users-register-create",
+    "Handler": "handler.handler",
+    "Layers": [
+     {
+      "Ref": "LambdasDependenciesLayer05B94269"
+     }
+    ],
+    "MemorySize": 256,
+    "Role": {
+     "Fn::GetAtt": [
+      "LambdasRegisterLambdaServiceRoleBD6137F5",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.11",
+    "Tags": [
+     {
+      "Key": "Domain",
+      "Value": "users"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Service",
+      "Value": "user-management"
+     }
+    ],
+    "Timeout": 30,
+    "TracingConfig": {
+     "Mode": "Active"
+    }
+   },
+   "DependsOn": [
+    "LambdasRegisterLambdaServiceRoleDefaultPolicy408E419F",
+    "LambdasRegisterLambdaServiceRoleBD6137F5"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Lambdas/RegisterLambda/Resource",
+    "aws:asset:path": "asset.e82320397c63e13a71517a8ade7b9e179639420f2a8f69943eaf557bb12a360d",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "LambdasProfileGetLambdaServiceRole21355109": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Domain",
+      "Value": "users"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Service",
+      "Value": "user-management"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Lambdas/ProfileGetLambda/ServiceRole/Resource"
+   }
+  },
+  "LambdasProfileGetLambdaServiceRoleDefaultPolicy09BE9169": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "xray:PutTelemetryRecords",
+        "xray:PutTraceSegments"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:Query",
+        "dynamodb:Scan"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "TablesUsersTable160FE13D",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "LambdasProfileGetLambdaServiceRoleDefaultPolicy09BE9169",
+    "Roles": [
+     {
+      "Ref": "LambdasProfileGetLambdaServiceRole21355109"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Lambdas/ProfileGetLambda/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "LambdasProfileGetLambdaE52FE42A": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-320644769527-ap-south-1",
+     "S3Key": "d69d950443ede8ae45eecb6434d01f5c0be75b818062497554368c350d073b29.zip"
+    },
+    "Description": "User profile retrieval - gets user by ID",
+    "Environment": {
+     "Variables": {
+      "USERS_TABLE_NAME": {
+       "Ref": "TablesUsersTable160FE13D"
+      }
+     }
+    },
+    "FunctionName": "users-profile-get",
+    "Handler": "get_handler.handler",
+    "Layers": [
+     {
+      "Ref": "LambdasDependenciesLayer05B94269"
+     }
+    ],
+    "MemorySize": 256,
+    "Role": {
+     "Fn::GetAtt": [
+      "LambdasProfileGetLambdaServiceRole21355109",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.11",
+    "Tags": [
+     {
+      "Key": "Domain",
+      "Value": "users"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Service",
+      "Value": "user-management"
+     }
+    ],
+    "Timeout": 30,
+    "TracingConfig": {
+     "Mode": "Active"
+    }
+   },
+   "DependsOn": [
+    "LambdasProfileGetLambdaServiceRoleDefaultPolicy09BE9169",
+    "LambdasProfileGetLambdaServiceRole21355109"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Lambdas/ProfileGetLambda/Resource",
+    "aws:asset:path": "asset.d69d950443ede8ae45eecb6434d01f5c0be75b818062497554368c350d073b29",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "LambdasProfileUpdateLambdaServiceRole9B85C7C4": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Domain",
+      "Value": "users"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Service",
+      "Value": "user-management"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Lambdas/ProfileUpdateLambda/ServiceRole/Resource"
+   }
+  },
+  "LambdasProfileUpdateLambdaServiceRoleDefaultPolicy35211C8B": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "xray:PutTelemetryRecords",
+        "xray:PutTraceSegments"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:PutItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:UpdateItem"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "TablesIdempotencyTable9CFEB1A0",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::GetAtt": [
+          "TablesUsersTable160FE13D",
+          "Arn"
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "events:PutEvents",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "EventBusUserAuditEventBus5BF0A895",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "LambdasProfileUpdateLambdaServiceRoleDefaultPolicy35211C8B",
+    "Roles": [
+     {
+      "Ref": "LambdasProfileUpdateLambdaServiceRole9B85C7C4"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Lambdas/ProfileUpdateLambda/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "LambdasProfileUpdateLambdaACEF4438": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-320644769527-ap-south-1",
+     "S3Key": "4c64a44b81d1ce721e187984516dfca3e4c3704a45b6a28764667829c144ae57.zip"
+    },
+    "Description": "User profile update - updates user name and metadata",
+    "Environment": {
+     "Variables": {
+      "USERS_TABLE_NAME": {
+       "Ref": "TablesUsersTable160FE13D"
+      },
+      "IDEMPOTENCY_TABLE_NAME": {
+       "Ref": "TablesIdempotencyTable9CFEB1A0"
+      },
+      "EVENT_BUS_NAME": {
+       "Ref": "EventBusUserAuditEventBus5BF0A895"
+      }
+     }
+    },
+    "FunctionName": "users-profile-update",
+    "Handler": "update_handler.handler",
+    "Layers": [
+     {
+      "Ref": "LambdasDependenciesLayer05B94269"
+     }
+    ],
+    "MemorySize": 256,
+    "Role": {
+     "Fn::GetAtt": [
+      "LambdasProfileUpdateLambdaServiceRole9B85C7C4",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.11",
+    "Tags": [
+     {
+      "Key": "Domain",
+      "Value": "users"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Service",
+      "Value": "user-management"
+     }
+    ],
+    "Timeout": 30,
+    "TracingConfig": {
+     "Mode": "Active"
+    }
+   },
+   "DependsOn": [
+    "LambdasProfileUpdateLambdaServiceRoleDefaultPolicy35211C8B",
+    "LambdasProfileUpdateLambdaServiceRole9B85C7C4"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Lambdas/ProfileUpdateLambda/Resource",
+    "aws:asset:path": "asset.4c64a44b81d1ce721e187984516dfca3e4c3704a45b6a28764667829c144ae57",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "LambdasStatusUpdateLambdaServiceRole895F24A7": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Domain",
+      "Value": "users"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Service",
+      "Value": "user-management"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Lambdas/StatusUpdateLambda/ServiceRole/Resource"
+   }
+  },
+  "LambdasStatusUpdateLambdaServiceRoleDefaultPolicy91F7F2C9": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "xray:PutTelemetryRecords",
+        "xray:PutTraceSegments"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:PutItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:UpdateItem"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "TablesUsersTable160FE13D",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": "events:PutEvents",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "EventBusUserAuditEventBus5BF0A895",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "LambdasStatusUpdateLambdaServiceRoleDefaultPolicy91F7F2C9",
+    "Roles": [
+     {
+      "Ref": "LambdasStatusUpdateLambdaServiceRole895F24A7"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Lambdas/StatusUpdateLambda/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "LambdasStatusUpdateLambda47C81393": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-320644769527-ap-south-1",
+     "S3Key": "d108edd00383ef86fdd8ed264937a1a63966f477140460f6b8f2a5c333cc1bbb.zip"
+    },
+    "Description": "User status management - updates user status lifecycle",
+    "Environment": {
+     "Variables": {
+      "USERS_TABLE_NAME": {
+       "Ref": "TablesUsersTable160FE13D"
+      },
+      "EVENT_BUS_NAME": {
+       "Ref": "EventBusUserAuditEventBus5BF0A895"
+      }
+     }
+    },
+    "FunctionName": "users-status-update",
+    "Handler": "handler.handler",
+    "Layers": [
+     {
+      "Ref": "LambdasDependenciesLayer05B94269"
+     }
+    ],
+    "MemorySize": 256,
+    "Role": {
+     "Fn::GetAtt": [
+      "LambdasStatusUpdateLambdaServiceRole895F24A7",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.11",
+    "Tags": [
+     {
+      "Key": "Domain",
+      "Value": "users"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Service",
+      "Value": "user-management"
+     }
+    ],
+    "Timeout": 30,
+    "TracingConfig": {
+     "Mode": "Active"
+    }
+   },
+   "DependsOn": [
+    "LambdasStatusUpdateLambdaServiceRoleDefaultPolicy91F7F2C9",
+    "LambdasStatusUpdateLambdaServiceRole895F24A7"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Lambdas/StatusUpdateLambda/Resource",
+    "aws:asset:path": "asset.d108edd00383ef86fdd8ed264937a1a63966f477140460f6b8f2a5c333cc1bbb",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "LambdasRoleAssignLambdaServiceRole283E1B18": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Domain",
+      "Value": "users"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Service",
+      "Value": "user-management"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Lambdas/RoleAssignLambda/ServiceRole/Resource"
+   }
+  },
+  "LambdasRoleAssignLambdaServiceRoleDefaultPolicyAB815506": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "xray:PutTelemetryRecords",
+        "xray:PutTraceSegments"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:PutItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:UpdateItem"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "TablesUsersTable160FE13D",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": "events:PutEvents",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "EventBusUserAuditEventBus5BF0A895",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "LambdasRoleAssignLambdaServiceRoleDefaultPolicyAB815506",
+    "Roles": [
+     {
+      "Ref": "LambdasRoleAssignLambdaServiceRole283E1B18"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Lambdas/RoleAssignLambda/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "LambdasRoleAssignLambda3BA828D5": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-320644769527-ap-south-1",
+     "S3Key": "d364ea38079e0d86a345bb05aade745827e2d37fc1d9b119926d23c439170f21.zip"
+    },
+    "Description": "Role assignment - assigns roles to users",
+    "Environment": {
+     "Variables": {
+      "USERS_TABLE_NAME": {
+       "Ref": "TablesUsersTable160FE13D"
+      },
+      "EVENT_BUS_NAME": {
+       "Ref": "EventBusUserAuditEventBus5BF0A895"
+      }
+     }
+    },
+    "FunctionName": "users-role-assign",
+    "Handler": "assign_handler.handler",
+    "Layers": [
+     {
+      "Ref": "LambdasDependenciesLayer05B94269"
+     }
+    ],
+    "MemorySize": 256,
+    "Role": {
+     "Fn::GetAtt": [
+      "LambdasRoleAssignLambdaServiceRole283E1B18",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.11",
+    "Tags": [
+     {
+      "Key": "Domain",
+      "Value": "users"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Service",
+      "Value": "user-management"
+     }
+    ],
+    "Timeout": 30,
+    "TracingConfig": {
+     "Mode": "Active"
+    }
+   },
+   "DependsOn": [
+    "LambdasRoleAssignLambdaServiceRoleDefaultPolicyAB815506",
+    "LambdasRoleAssignLambdaServiceRole283E1B18"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Lambdas/RoleAssignLambda/Resource",
+    "aws:asset:path": "asset.d364ea38079e0d86a345bb05aade745827e2d37fc1d9b119926d23c439170f21",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "LambdasRoleRemoveLambdaServiceRole6895456B": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Domain",
+      "Value": "users"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Service",
+      "Value": "user-management"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Lambdas/RoleRemoveLambda/ServiceRole/Resource"
+   }
+  },
+  "LambdasRoleRemoveLambdaServiceRoleDefaultPolicy6860E681": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "xray:PutTelemetryRecords",
+        "xray:PutTraceSegments"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:PutItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:UpdateItem"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "TablesUsersTable160FE13D",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": "events:PutEvents",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "EventBusUserAuditEventBus5BF0A895",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "LambdasRoleRemoveLambdaServiceRoleDefaultPolicy6860E681",
+    "Roles": [
+     {
+      "Ref": "LambdasRoleRemoveLambdaServiceRole6895456B"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Lambdas/RoleRemoveLambda/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "LambdasRoleRemoveLambdaA5778CAE": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-320644769527-ap-south-1",
+     "S3Key": "f7ba9acff16c5a3a87b42367c8cffdf691882c3429dbf81e62d65b0298457a72.zip"
+    },
+    "Description": "Role removal - removes roles from users",
+    "Environment": {
+     "Variables": {
+      "USERS_TABLE_NAME": {
+       "Ref": "TablesUsersTable160FE13D"
+      },
+      "EVENT_BUS_NAME": {
+       "Ref": "EventBusUserAuditEventBus5BF0A895"
+      }
+     }
+    },
+    "FunctionName": "users-role-remove",
+    "Handler": "remove_handler.handler",
+    "Layers": [
+     {
+      "Ref": "LambdasDependenciesLayer05B94269"
+     }
+    ],
+    "MemorySize": 256,
+    "Role": {
+     "Fn::GetAtt": [
+      "LambdasRoleRemoveLambdaServiceRole6895456B",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.11",
+    "Tags": [
+     {
+      "Key": "Domain",
+      "Value": "users"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Service",
+      "Value": "user-management"
+     }
+    ],
+    "Timeout": 30,
+    "TracingConfig": {
+     "Mode": "Active"
+    }
+   },
+   "DependsOn": [
+    "LambdasRoleRemoveLambdaServiceRoleDefaultPolicy6860E681",
+    "LambdasRoleRemoveLambdaServiceRole6895456B"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Lambdas/RoleRemoveLambda/Resource",
+    "aws:asset:path": "asset.f7ba9acff16c5a3a87b42367c8cffdf691882c3429dbf81e62d65b0298457a72",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "LambdasListQueryLambdaServiceRole5C41D780": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Domain",
+      "Value": "users"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Service",
+      "Value": "user-management"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Lambdas/ListQueryLambda/ServiceRole/Resource"
+   }
+  },
+  "LambdasListQueryLambdaServiceRoleDefaultPolicyF1E49238": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "xray:PutTelemetryRecords",
+        "xray:PutTraceSegments"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:Query",
+        "dynamodb:Scan"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "TablesUsersTable160FE13D",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "LambdasListQueryLambdaServiceRoleDefaultPolicyF1E49238",
+    "Roles": [
+     {
+      "Ref": "LambdasListQueryLambdaServiceRole5C41D780"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Lambdas/ListQueryLambda/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "LambdasListQueryLambda62647465": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-320644769527-ap-south-1",
+     "S3Key": "8413ff910a4b02cbb53e95105f3f22cef067f1a76eb85817c4854b1cd1a933c2.zip"
+    },
+    "Description": "User listing - queries users by status with pagination",
+    "Environment": {
+     "Variables": {
+      "USERS_TABLE_NAME": {
+       "Ref": "TablesUsersTable160FE13D"
+      }
+     }
+    },
+    "FunctionName": "users-list-query",
+    "Handler": "handler.handler",
+    "Layers": [
+     {
+      "Ref": "LambdasDependenciesLayer05B94269"
+     }
+    ],
+    "MemorySize": 256,
+    "Role": {
+     "Fn::GetAtt": [
+      "LambdasListQueryLambdaServiceRole5C41D780",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.11",
+    "Tags": [
+     {
+      "Key": "Domain",
+      "Value": "users"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Service",
+      "Value": "user-management"
+     }
+    ],
+    "Timeout": 30,
+    "TracingConfig": {
+     "Mode": "Active"
+    }
+   },
+   "DependsOn": [
+    "LambdasListQueryLambdaServiceRoleDefaultPolicyF1E49238",
+    "LambdasListQueryLambdaServiceRole5C41D780"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Lambdas/ListQueryLambda/Resource",
+    "aws:asset:path": "asset.8413ff910a4b02cbb53e95105f3f22cef067f1a76eb85817c4854b1cd1a933c2",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "LambdasAuditQueryLambdaServiceRole3BA6F05B": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Domain",
+      "Value": "users"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Service",
+      "Value": "user-management"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Lambdas/AuditQueryLambda/ServiceRole/Resource"
+   }
+  },
+  "LambdasAuditQueryLambdaServiceRoleDefaultPolicy0D6C7F2D": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "xray:PutTelemetryRecords",
+        "xray:PutTraceSegments"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:Query",
+        "dynamodb:Scan"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "TablesUsersTable160FE13D",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "LambdasAuditQueryLambdaServiceRoleDefaultPolicy0D6C7F2D",
+    "Roles": [
+     {
+      "Ref": "LambdasAuditQueryLambdaServiceRole3BA6F05B"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Lambdas/AuditQueryLambda/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "LambdasAuditQueryLambda24CA3A04": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-320644769527-ap-south-1",
+     "S3Key": "7df16d00a7d83a4ac3266eeaa1915efd5c92a5b0620ddd5ad0ce2ac942340d93.zip"
+    },
+    "Description": "Audit log retrieval - queries audit events for users",
+    "Environment": {
+     "Variables": {
+      "USERS_TABLE_NAME": {
+       "Ref": "TablesUsersTable160FE13D"
+      }
+     }
+    },
+    "FunctionName": "users-audit-query",
+    "Handler": "handler.handler",
+    "Layers": [
+     {
+      "Ref": "LambdasDependenciesLayer05B94269"
+     }
+    ],
+    "MemorySize": 256,
+    "Role": {
+     "Fn::GetAtt": [
+      "LambdasAuditQueryLambdaServiceRole3BA6F05B",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.11",
+    "Tags": [
+     {
+      "Key": "Domain",
+      "Value": "users"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Service",
+      "Value": "user-management"
+     }
+    ],
+    "Timeout": 30,
+    "TracingConfig": {
+     "Mode": "Active"
+    }
+   },
+   "DependsOn": [
+    "LambdasAuditQueryLambdaServiceRoleDefaultPolicy0D6C7F2D",
+    "LambdasAuditQueryLambdaServiceRole3BA6F05B"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Lambdas/AuditQueryLambda/Resource",
+    "aws:asset:path": "asset.7df16d00a7d83a4ac3266eeaa1915efd5c92a5b0620ddd5ad0ce2ac942340d93",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "ApiUserManagementApi8B5997A1": {
+   "Type": "AWS::ApiGateway::RestApi",
+   "Properties": {
+    "Description": "User Management Service REST API",
+    "Name": "user-management-api",
+    "Tags": [
+     {
+      "Key": "Domain",
+      "Value": "users"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Service",
+      "Value": "user-management"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Resource"
+   }
+  },
+  "ApiUserManagementApiCloudWatchRoleAEA1059C": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "apigateway.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Domain",
+      "Value": "users"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Service",
+      "Value": "user-management"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/CloudWatchRole/Resource"
+   }
+  },
+  "ApiUserManagementApiAccountBF755B10": {
+   "Type": "AWS::ApiGateway::Account",
+   "Properties": {
+    "CloudWatchRoleArn": {
+     "Fn::GetAtt": [
+      "ApiUserManagementApiCloudWatchRoleAEA1059C",
+      "Arn"
+     ]
+    }
+   },
+   "DependsOn": [
+    "ApiUserManagementApi8B5997A1"
+   ],
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Account"
+   }
+  },
+  "ApiUserManagementApiDeployment6EB49DB28398104a7779cb629b441f4c97fc4a31": {
+   "Type": "AWS::ApiGateway::Deployment",
+   "Properties": {
+    "Description": "User Management Service REST API",
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    }
+   },
+   "DependsOn": [
+    "ApiBodyValidatorB3E71016",
+    "ApiParamsValidatorFAA8F165",
+    "ApiUserManagementApiOPTIONS3D3B9491",
+    "ApiUserManagementApiusersuserIdauditGET0D8572F3",
+    "ApiUserManagementApiusersuserIdauditOPTIONS6DE9FDCE",
+    "ApiUserManagementApiusersuserIdauditED30FAF2",
+    "ApiUserManagementApiusersuserIdGET60F01D83",
+    "ApiUserManagementApiusersuserIdOPTIONS8A3042D1",
+    "ApiUserManagementApiusersuserIdPATCHE2467AC3",
+    "ApiUserManagementApiusersuserId9F39CAFB",
+    "ApiUserManagementApiusersuserIdrolesroleDELETE752C5E39",
+    "ApiUserManagementApiusersuserIdrolesroleOPTIONS1AF4491E",
+    "ApiUserManagementApiusersuserIdrolesrole3B9A9515",
+    "ApiUserManagementApiusersuserIdrolesOPTIONSFEBD5872",
+    "ApiUserManagementApiusersuserIdrolesPOST99102746",
+    "ApiUserManagementApiusersuserIdroles18B3C8F2",
+    "ApiUserManagementApiusersuserIdstatusOPTIONS48B2A6D7",
+    "ApiUserManagementApiusersuserIdstatusPUT52374284",
+    "ApiUserManagementApiusersuserIdstatus8D1B6D20",
+    "ApiUserManagementApiusersGET70ADC7FF",
+    "ApiUserManagementApiusersOPTIONSB3BA5517",
+    "ApiUserManagementApiusersPOSTBCABF786",
+    "ApiUserManagementApiusers29506F29",
+    "ApiUserManagementApiProfileUpdateModelE8202D00",
+    "ApiUserManagementApiRegistrationModelCC97A2F7",
+    "ApiUserManagementApiRoleAssignModel0109A992",
+    "ApiUserManagementApiStatusUpdateModel33D9BEB2"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Deployment/Resource",
+    "aws:cdk:do-not-refactor": true
+   }
+  },
+  "ApiUserManagementApiDeploymentStageprod38F7F89F": {
+   "Type": "AWS::ApiGateway::Stage",
+   "Properties": {
+    "DeploymentId": {
+     "Ref": "ApiUserManagementApiDeployment6EB49DB28398104a7779cb629b441f4c97fc4a31"
+    },
+    "MethodSettings": [
+     {
+      "DataTraceEnabled": true,
+      "HttpMethod": "*",
+      "LoggingLevel": "INFO",
+      "MetricsEnabled": true,
+      "ResourcePath": "/*",
+      "ThrottlingBurstLimit": 2000,
+      "ThrottlingRateLimit": 1000
+     }
+    ],
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    },
+    "StageName": "prod",
+    "Tags": [
+     {
+      "Key": "Domain",
+      "Value": "users"
+     },
+     {
+      "Key": "Environment",
+      "Value": "dev"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Service",
+      "Value": "user-management"
+     }
+    ],
+    "TracingEnabled": true
+   },
+   "DependsOn": [
+    "ApiUserManagementApiAccountBF755B10"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/DeploymentStage.prod/Resource"
+   }
+  },
+  "ApiUserManagementApiOPTIONS3D3B9491": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Fn::GetAtt": [
+      "ApiUserManagementApi8B5997A1",
+      "RootResourceId"
+     ]
+    },
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/OPTIONS/Resource"
+   }
+  },
+  "ApiUserManagementApiusers29506F29": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Fn::GetAtt": [
+      "ApiUserManagementApi8B5997A1",
+      "RootResourceId"
+     ]
+    },
+    "PathPart": "users",
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/Resource"
+   }
+  },
+  "ApiUserManagementApiusersOPTIONSB3BA5517": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "ApiUserManagementApiusers29506F29"
+    },
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/OPTIONS/Resource"
+   }
+  },
+  "ApiUserManagementApiusersPOSTApiPermissionusersdevstackApiUserManagementApiA7C01D2BPOSTusers0ABB8E4A": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "LambdasRegisterLambda70BC60D5",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:ap-south-1:320644769527:",
+       {
+        "Ref": "ApiUserManagementApi8B5997A1"
+       },
+       "/",
+       {
+        "Ref": "ApiUserManagementApiDeploymentStageprod38F7F89F"
+       },
+       "/POST/users"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/POST/ApiPermission.usersdevstackApiUserManagementApiA7C01D2B.POST..users"
+   }
+  },
+  "ApiUserManagementApiusersPOSTApiPermissionTestusersdevstackApiUserManagementApiA7C01D2BPOSTusersFD9C3C6C": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "LambdasRegisterLambda70BC60D5",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:ap-south-1:320644769527:",
+       {
+        "Ref": "ApiUserManagementApi8B5997A1"
+       },
+       "/test-invoke-stage/POST/users"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/POST/ApiPermission.Test.usersdevstackApiUserManagementApiA7C01D2B.POST..users"
+   }
+  },
+  "ApiUserManagementApiusersPOSTBCABF786": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "POST",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:aws:apigateway:ap-south-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "LambdasRegisterLambda70BC60D5",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "MethodResponses": [
+     {
+      "ResponseModels": {
+       "application/json": "Empty"
+      },
+      "StatusCode": "201"
+     },
+     {
+      "StatusCode": "400"
+     },
+     {
+      "StatusCode": "401"
+     },
+     {
+      "StatusCode": "409"
+     },
+     {
+      "StatusCode": "500"
+     }
+    ],
+    "RequestModels": {
+     "application/json": {
+      "Ref": "ApiUserManagementApiRegistrationModelCC97A2F7"
+     }
+    },
+    "RequestValidatorId": {
+     "Ref": "ApiBodyValidatorB3E71016"
+    },
+    "ResourceId": {
+     "Ref": "ApiUserManagementApiusers29506F29"
+    },
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/POST/Resource"
+   }
+  },
+  "ApiUserManagementApiusersGETApiPermissionusersdevstackApiUserManagementApiA7C01D2BGETusersCC5576E8": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "LambdasListQueryLambda62647465",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:ap-south-1:320644769527:",
+       {
+        "Ref": "ApiUserManagementApi8B5997A1"
+       },
+       "/",
+       {
+        "Ref": "ApiUserManagementApiDeploymentStageprod38F7F89F"
+       },
+       "/GET/users"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/GET/ApiPermission.usersdevstackApiUserManagementApiA7C01D2B.GET..users"
+   }
+  },
+  "ApiUserManagementApiusersGETApiPermissionTestusersdevstackApiUserManagementApiA7C01D2BGETusersDD01B9A7": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "LambdasListQueryLambda62647465",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:ap-south-1:320644769527:",
+       {
+        "Ref": "ApiUserManagementApi8B5997A1"
+       },
+       "/test-invoke-stage/GET/users"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/GET/ApiPermission.Test.usersdevstackApiUserManagementApiA7C01D2B.GET..users"
+   }
+  },
+  "ApiUserManagementApiusersGET70ADC7FF": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "GET",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:aws:apigateway:ap-south-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "LambdasListQueryLambda62647465",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "MethodResponses": [
+     {
+      "ResponseModels": {
+       "application/json": "Empty"
+      },
+      "StatusCode": "200"
+     },
+     {
+      "StatusCode": "400"
+     },
+     {
+      "StatusCode": "401"
+     },
+     {
+      "StatusCode": "500"
+     }
+    ],
+    "RequestParameters": {
+     "method.request.querystring.limit": false,
+     "method.request.querystring.nextToken": false,
+     "method.request.querystring.status": false
+    },
+    "RequestValidatorId": {
+     "Ref": "ApiParamsValidatorFAA8F165"
+    },
+    "ResourceId": {
+     "Ref": "ApiUserManagementApiusers29506F29"
+    },
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/GET/Resource"
+   }
+  },
+  "ApiUserManagementApiusersuserId9F39CAFB": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Ref": "ApiUserManagementApiusers29506F29"
+    },
+    "PathPart": "{userId}",
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/Resource"
+   }
+  },
+  "ApiUserManagementApiusersuserIdOPTIONS8A3042D1": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "ApiUserManagementApiusersuserId9F39CAFB"
+    },
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/OPTIONS/Resource"
+   }
+  },
+  "ApiUserManagementApiusersuserIdGETApiPermissionusersdevstackApiUserManagementApiA7C01D2BGETusersuserId893DA8E3": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "LambdasProfileGetLambdaE52FE42A",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:ap-south-1:320644769527:",
+       {
+        "Ref": "ApiUserManagementApi8B5997A1"
+       },
+       "/",
+       {
+        "Ref": "ApiUserManagementApiDeploymentStageprod38F7F89F"
+       },
+       "/GET/users/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/GET/ApiPermission.usersdevstackApiUserManagementApiA7C01D2B.GET..users.{userId}"
+   }
+  },
+  "ApiUserManagementApiusersuserIdGETApiPermissionTestusersdevstackApiUserManagementApiA7C01D2BGETusersuserId32B62145": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "LambdasProfileGetLambdaE52FE42A",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:ap-south-1:320644769527:",
+       {
+        "Ref": "ApiUserManagementApi8B5997A1"
+       },
+       "/test-invoke-stage/GET/users/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/GET/ApiPermission.Test.usersdevstackApiUserManagementApiA7C01D2B.GET..users.{userId}"
+   }
+  },
+  "ApiUserManagementApiusersuserIdGET60F01D83": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "GET",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:aws:apigateway:ap-south-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "LambdasProfileGetLambdaE52FE42A",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "MethodResponses": [
+     {
+      "ResponseModels": {
+       "application/json": "Empty"
+      },
+      "StatusCode": "200"
+     },
+     {
+      "StatusCode": "401"
+     },
+     {
+      "StatusCode": "404"
+     },
+     {
+      "StatusCode": "500"
+     }
+    ],
+    "RequestParameters": {
+     "method.request.path.userId": true
+    },
+    "RequestValidatorId": {
+     "Ref": "ApiParamsValidatorFAA8F165"
+    },
+    "ResourceId": {
+     "Ref": "ApiUserManagementApiusersuserId9F39CAFB"
+    },
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/GET/Resource"
+   }
+  },
+  "ApiUserManagementApiusersuserIdPATCHApiPermissionusersdevstackApiUserManagementApiA7C01D2BPATCHusersuserId69EC1692": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "LambdasProfileUpdateLambdaACEF4438",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:ap-south-1:320644769527:",
+       {
+        "Ref": "ApiUserManagementApi8B5997A1"
+       },
+       "/",
+       {
+        "Ref": "ApiUserManagementApiDeploymentStageprod38F7F89F"
+       },
+       "/PATCH/users/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/PATCH/ApiPermission.usersdevstackApiUserManagementApiA7C01D2B.PATCH..users.{userId}"
+   }
+  },
+  "ApiUserManagementApiusersuserIdPATCHApiPermissionTestusersdevstackApiUserManagementApiA7C01D2BPATCHusersuserId4911020A": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "LambdasProfileUpdateLambdaACEF4438",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:ap-south-1:320644769527:",
+       {
+        "Ref": "ApiUserManagementApi8B5997A1"
+       },
+       "/test-invoke-stage/PATCH/users/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/PATCH/ApiPermission.Test.usersdevstackApiUserManagementApiA7C01D2B.PATCH..users.{userId}"
+   }
+  },
+  "ApiUserManagementApiusersuserIdPATCHE2467AC3": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "PATCH",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:aws:apigateway:ap-south-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "LambdasProfileUpdateLambdaACEF4438",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "MethodResponses": [
+     {
+      "ResponseModels": {
+       "application/json": "Empty"
+      },
+      "StatusCode": "200"
+     },
+     {
+      "StatusCode": "400"
+     },
+     {
+      "StatusCode": "401"
+     },
+     {
+      "StatusCode": "404"
+     },
+     {
+      "StatusCode": "409"
+     },
+     {
+      "StatusCode": "500"
+     }
+    ],
+    "RequestModels": {
+     "application/json": {
+      "Ref": "ApiUserManagementApiProfileUpdateModelE8202D00"
+     }
+    },
+    "RequestParameters": {
+     "method.request.path.userId": true
+    },
+    "RequestValidatorId": {
+     "Ref": "ApiBodyValidatorB3E71016"
+    },
+    "ResourceId": {
+     "Ref": "ApiUserManagementApiusersuserId9F39CAFB"
+    },
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/PATCH/Resource"
+   }
+  },
+  "ApiUserManagementApiusersuserIdstatus8D1B6D20": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Ref": "ApiUserManagementApiusersuserId9F39CAFB"
+    },
+    "PathPart": "status",
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/status/Resource"
+   }
+  },
+  "ApiUserManagementApiusersuserIdstatusOPTIONS48B2A6D7": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "ApiUserManagementApiusersuserIdstatus8D1B6D20"
+    },
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/status/OPTIONS/Resource"
+   }
+  },
+  "ApiUserManagementApiusersuserIdstatusPUTApiPermissionusersdevstackApiUserManagementApiA7C01D2BPUTusersuserIdstatusB90FCA3C": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "LambdasStatusUpdateLambda47C81393",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:ap-south-1:320644769527:",
+       {
+        "Ref": "ApiUserManagementApi8B5997A1"
+       },
+       "/",
+       {
+        "Ref": "ApiUserManagementApiDeploymentStageprod38F7F89F"
+       },
+       "/PUT/users/*/status"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/status/PUT/ApiPermission.usersdevstackApiUserManagementApiA7C01D2B.PUT..users.{userId}.status"
+   }
+  },
+  "ApiUserManagementApiusersuserIdstatusPUTApiPermissionTestusersdevstackApiUserManagementApiA7C01D2BPUTusersuserIdstatusAA744B0E": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "LambdasStatusUpdateLambda47C81393",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:ap-south-1:320644769527:",
+       {
+        "Ref": "ApiUserManagementApi8B5997A1"
+       },
+       "/test-invoke-stage/PUT/users/*/status"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/status/PUT/ApiPermission.Test.usersdevstackApiUserManagementApiA7C01D2B.PUT..users.{userId}.status"
+   }
+  },
+  "ApiUserManagementApiusersuserIdstatusPUT52374284": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "PUT",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:aws:apigateway:ap-south-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "LambdasStatusUpdateLambda47C81393",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "MethodResponses": [
+     {
+      "ResponseModels": {
+       "application/json": "Empty"
+      },
+      "StatusCode": "200"
+     },
+     {
+      "StatusCode": "400"
+     },
+     {
+      "StatusCode": "401"
+     },
+     {
+      "StatusCode": "404"
+     },
+     {
+      "StatusCode": "500"
+     }
+    ],
+    "RequestModels": {
+     "application/json": {
+      "Ref": "ApiUserManagementApiStatusUpdateModel33D9BEB2"
+     }
+    },
+    "RequestParameters": {
+     "method.request.path.userId": true
+    },
+    "RequestValidatorId": {
+     "Ref": "ApiBodyValidatorB3E71016"
+    },
+    "ResourceId": {
+     "Ref": "ApiUserManagementApiusersuserIdstatus8D1B6D20"
+    },
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/status/PUT/Resource"
+   }
+  },
+  "ApiUserManagementApiusersuserIdroles18B3C8F2": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Ref": "ApiUserManagementApiusersuserId9F39CAFB"
+    },
+    "PathPart": "roles",
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/roles/Resource"
+   }
+  },
+  "ApiUserManagementApiusersuserIdrolesOPTIONSFEBD5872": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "ApiUserManagementApiusersuserIdroles18B3C8F2"
+    },
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/roles/OPTIONS/Resource"
+   }
+  },
+  "ApiUserManagementApiusersuserIdrolesPOSTApiPermissionusersdevstackApiUserManagementApiA7C01D2BPOSTusersuserIdroles057903B9": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "LambdasRoleAssignLambda3BA828D5",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:ap-south-1:320644769527:",
+       {
+        "Ref": "ApiUserManagementApi8B5997A1"
+       },
+       "/",
+       {
+        "Ref": "ApiUserManagementApiDeploymentStageprod38F7F89F"
+       },
+       "/POST/users/*/roles"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/roles/POST/ApiPermission.usersdevstackApiUserManagementApiA7C01D2B.POST..users.{userId}.roles"
+   }
+  },
+  "ApiUserManagementApiusersuserIdrolesPOSTApiPermissionTestusersdevstackApiUserManagementApiA7C01D2BPOSTusersuserIdroles1842A94C": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "LambdasRoleAssignLambda3BA828D5",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:ap-south-1:320644769527:",
+       {
+        "Ref": "ApiUserManagementApi8B5997A1"
+       },
+       "/test-invoke-stage/POST/users/*/roles"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/roles/POST/ApiPermission.Test.usersdevstackApiUserManagementApiA7C01D2B.POST..users.{userId}.roles"
+   }
+  },
+  "ApiUserManagementApiusersuserIdrolesPOST99102746": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "POST",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:aws:apigateway:ap-south-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "LambdasRoleAssignLambda3BA828D5",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "MethodResponses": [
+     {
+      "ResponseModels": {
+       "application/json": "Empty"
+      },
+      "StatusCode": "200"
+     },
+     {
+      "StatusCode": "400"
+     },
+     {
+      "StatusCode": "401"
+     },
+     {
+      "StatusCode": "404"
+     },
+     {
+      "StatusCode": "500"
+     }
+    ],
+    "RequestModels": {
+     "application/json": {
+      "Ref": "ApiUserManagementApiRoleAssignModel0109A992"
+     }
+    },
+    "RequestParameters": {
+     "method.request.path.userId": true
+    },
+    "RequestValidatorId": {
+     "Ref": "ApiBodyValidatorB3E71016"
+    },
+    "ResourceId": {
+     "Ref": "ApiUserManagementApiusersuserIdroles18B3C8F2"
+    },
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/roles/POST/Resource"
+   }
+  },
+  "ApiUserManagementApiusersuserIdrolesrole3B9A9515": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Ref": "ApiUserManagementApiusersuserIdroles18B3C8F2"
+    },
+    "PathPart": "{role}",
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/roles/{role}/Resource"
+   }
+  },
+  "ApiUserManagementApiusersuserIdrolesroleOPTIONS1AF4491E": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "ApiUserManagementApiusersuserIdrolesrole3B9A9515"
+    },
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/roles/{role}/OPTIONS/Resource"
+   }
+  },
+  "ApiUserManagementApiusersuserIdrolesroleDELETEApiPermissionusersdevstackApiUserManagementApiA7C01D2BDELETEusersuserIdrolesroleF888051E": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "LambdasRoleRemoveLambdaA5778CAE",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:ap-south-1:320644769527:",
+       {
+        "Ref": "ApiUserManagementApi8B5997A1"
+       },
+       "/",
+       {
+        "Ref": "ApiUserManagementApiDeploymentStageprod38F7F89F"
+       },
+       "/DELETE/users/*/roles/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/roles/{role}/DELETE/ApiPermission.usersdevstackApiUserManagementApiA7C01D2B.DELETE..users.{userId}.roles.{role}"
+   }
+  },
+  "ApiUserManagementApiusersuserIdrolesroleDELETEApiPermissionTestusersdevstackApiUserManagementApiA7C01D2BDELETEusersuserIdrolesroleBEF4C2E5": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "LambdasRoleRemoveLambdaA5778CAE",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:ap-south-1:320644769527:",
+       {
+        "Ref": "ApiUserManagementApi8B5997A1"
+       },
+       "/test-invoke-stage/DELETE/users/*/roles/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/roles/{role}/DELETE/ApiPermission.Test.usersdevstackApiUserManagementApiA7C01D2B.DELETE..users.{userId}.roles.{role}"
+   }
+  },
+  "ApiUserManagementApiusersuserIdrolesroleDELETE752C5E39": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "DELETE",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:aws:apigateway:ap-south-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "LambdasRoleRemoveLambdaA5778CAE",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "MethodResponses": [
+     {
+      "ResponseModels": {
+       "application/json": "Empty"
+      },
+      "StatusCode": "200"
+     },
+     {
+      "StatusCode": "401"
+     },
+     {
+      "StatusCode": "404"
+     },
+     {
+      "StatusCode": "500"
+     }
+    ],
+    "RequestParameters": {
+     "method.request.path.userId": true,
+     "method.request.path.role": true
+    },
+    "RequestValidatorId": {
+     "Ref": "ApiParamsValidatorFAA8F165"
+    },
+    "ResourceId": {
+     "Ref": "ApiUserManagementApiusersuserIdrolesrole3B9A9515"
+    },
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/roles/{role}/DELETE/Resource"
+   }
+  },
+  "ApiUserManagementApiusersuserIdauditED30FAF2": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Ref": "ApiUserManagementApiusersuserId9F39CAFB"
+    },
+    "PathPart": "audit",
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/audit/Resource"
+   }
+  },
+  "ApiUserManagementApiusersuserIdauditOPTIONS6DE9FDCE": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "ApiUserManagementApiusersuserIdauditED30FAF2"
+    },
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/audit/OPTIONS/Resource"
+   }
+  },
+  "ApiUserManagementApiusersuserIdauditGETApiPermissionusersdevstackApiUserManagementApiA7C01D2BGETusersuserIdaudit51F33201": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "LambdasAuditQueryLambda24CA3A04",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:ap-south-1:320644769527:",
+       {
+        "Ref": "ApiUserManagementApi8B5997A1"
+       },
+       "/",
+       {
+        "Ref": "ApiUserManagementApiDeploymentStageprod38F7F89F"
+       },
+       "/GET/users/*/audit"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/audit/GET/ApiPermission.usersdevstackApiUserManagementApiA7C01D2B.GET..users.{userId}.audit"
+   }
+  },
+  "ApiUserManagementApiusersuserIdauditGETApiPermissionTestusersdevstackApiUserManagementApiA7C01D2BGETusersuserIdauditDB0BA6E4": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "LambdasAuditQueryLambda24CA3A04",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:ap-south-1:320644769527:",
+       {
+        "Ref": "ApiUserManagementApi8B5997A1"
+       },
+       "/test-invoke-stage/GET/users/*/audit"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/audit/GET/ApiPermission.Test.usersdevstackApiUserManagementApiA7C01D2B.GET..users.{userId}.audit"
+   }
+  },
+  "ApiUserManagementApiusersuserIdauditGET0D8572F3": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "GET",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:aws:apigateway:ap-south-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "LambdasAuditQueryLambda24CA3A04",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "MethodResponses": [
+     {
+      "ResponseModels": {
+       "application/json": "Empty"
+      },
+      "StatusCode": "200"
+     },
+     {
+      "StatusCode": "400"
+     },
+     {
+      "StatusCode": "401"
+     },
+     {
+      "StatusCode": "404"
+     },
+     {
+      "StatusCode": "500"
+     }
+    ],
+    "RequestParameters": {
+     "method.request.path.userId": true,
+     "method.request.querystring.limit": false,
+     "method.request.querystring.nextToken": false
+    },
+    "RequestValidatorId": {
+     "Ref": "ApiParamsValidatorFAA8F165"
+    },
+    "ResourceId": {
+     "Ref": "ApiUserManagementApiusersuserIdauditED30FAF2"
+    },
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/Default/users/{userId}/audit/GET/Resource"
+   }
+  },
+  "ApiUserManagementApiRegistrationModelCC97A2F7": {
+   "Type": "AWS::ApiGateway::Model",
+   "Properties": {
+    "ContentType": "application/json",
+    "Name": "RegistrationRequest",
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    },
+    "Schema": {
+     "properties": {
+      "idempotencyKey": {
+       "minLength": 1,
+       "type": "string"
+      },
+      "email": {
+       "format": "email",
+       "minLength": 1,
+       "type": "string"
+      },
+      "name": {
+       "minLength": 1,
+       "type": "string"
+      },
+      "metadata": {
+       "type": "object"
+      }
+     },
+     "required": [
+      "idempotencyKey",
+      "email",
+      "name"
+     ],
+     "$schema": "http://json-schema.org/draft-04/schema#",
+     "title": "User Registration Request",
+     "type": "object"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/RegistrationModel/Resource"
+   }
+  },
+  "ApiUserManagementApiProfileUpdateModelE8202D00": {
+   "Type": "AWS::ApiGateway::Model",
+   "Properties": {
+    "ContentType": "application/json",
+    "Name": "ProfileUpdateRequest",
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    },
+    "Schema": {
+     "properties": {
+      "idempotencyKey": {
+       "minLength": 1,
+       "type": "string"
+      },
+      "name": {
+       "minLength": 1,
+       "type": "string"
+      },
+      "metadata": {
+       "type": "object"
+      }
+     },
+     "required": [
+      "idempotencyKey"
+     ],
+     "$schema": "http://json-schema.org/draft-04/schema#",
+     "title": "Profile Update Request",
+     "type": "object"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/ProfileUpdateModel/Resource"
+   }
+  },
+  "ApiUserManagementApiStatusUpdateModel33D9BEB2": {
+   "Type": "AWS::ApiGateway::Model",
+   "Properties": {
+    "ContentType": "application/json",
+    "Name": "StatusUpdateRequest",
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    },
+    "Schema": {
+     "properties": {
+      "status": {
+       "enum": [
+        "active",
+        "disabled",
+        "deleted"
+       ],
+       "type": "string"
+      }
+     },
+     "required": [
+      "status"
+     ],
+     "$schema": "http://json-schema.org/draft-04/schema#",
+     "title": "Status Update Request",
+     "type": "object"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/StatusUpdateModel/Resource"
+   }
+  },
+  "ApiUserManagementApiRoleAssignModel0109A992": {
+   "Type": "AWS::ApiGateway::Model",
+   "Properties": {
+    "ContentType": "application/json",
+    "Name": "RoleAssignRequest",
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    },
+    "Schema": {
+     "properties": {
+      "role": {
+       "minLength": 1,
+       "type": "string"
+      }
+     },
+     "required": [
+      "role"
+     ],
+     "$schema": "http://json-schema.org/draft-04/schema#",
+     "title": "Role Assignment Request",
+     "type": "object"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/UserManagementApi/RoleAssignModel/Resource"
+   }
+  },
+  "ApiBodyValidatorB3E71016": {
+   "Type": "AWS::ApiGateway::RequestValidator",
+   "Properties": {
+    "Name": "body-validator",
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    },
+    "ValidateRequestBody": true,
+    "ValidateRequestParameters": true
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/BodyValidator/Resource"
+   }
+  },
+  "ApiParamsValidatorFAA8F165": {
+   "Type": "AWS::ApiGateway::RequestValidator",
+   "Properties": {
+    "Name": "params-validator",
+    "RestApiId": {
+     "Ref": "ApiUserManagementApi8B5997A1"
+    },
+    "ValidateRequestBody": false,
+    "ValidateRequestParameters": true
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/Api/ParamsValidator/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/12Q3U7DMAyFn4X7LIgNHqAbPzdMTB3idvJS04WlcYkdpqrqu6OkHQOu/J1zHDvJXM8Xd/rmCk48M9Vx5uxe91sBc1Rw4l1fdR4aqva6f4W9Q7V69xkGhV/ohXX/kOoycop+uIxjb65FMAf7lfWEg3JUs+6fqX4KFNsUnXlQDpp9BbrfWl87FPKP0Rux5NUPrN4v5jN0GN4w8BT81xsMjeWkBmWh0f2GnDVdjkYqabotpYfxYgfMKKyLVBQv9DKaI8oSGBW0tgbBE3S6L5GlaG0+esHCGIpe1D22jroGvST3l9oK1HnfCCUyxWAwj1+jHKhK4UTndFoy8poqdLkpQ4mfEVnewNkKhMLY+9cbhssoE1mo2YVJsy5OvMreZds/+Wt5/pV0devrFLxEaaMMatPJgfz1Qt/c6vnVB1s7C9GLbVCXY/0Gxuor+20CAAA="
+   },
+   "Metadata": {
+    "aws:cdk:path": "users-dev-stack/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "ApiUserManagementApiEndpoint742A8397": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Ref": "ApiUserManagementApi8B5997A1"
+      },
+      ".execute-api.ap-south-1.",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "ApiUserManagementApiDeploymentStageprod38F7F89F"
+      },
+      "/"
+     ]
+    ]
+   }
+  },
+  "ApiEndpointUrl": {
+   "Description": "User Management API endpoint URL",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Ref": "ApiUserManagementApi8B5997A1"
+      },
+      ".execute-api.ap-south-1.",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "ApiUserManagementApiDeploymentStageprod38F7F89F"
+      },
+      "/"
+     ]
+    ]
+   },
+   "Export": {
+    "Name": "users-dev-stack-api-url"
+   }
+  },
+  "ApiId": {
+   "Description": "User Management API Gateway ID",
+   "Value": {
+    "Ref": "ApiUserManagementApi8B5997A1"
+   },
+   "Export": {
+    "Name": "users-dev-stack-api-id"
+   }
+  },
+  "UsersTableName": {
+   "Description": "Users DynamoDB table name",
+   "Value": {
+    "Ref": "TablesUsersTable160FE13D"
+   },
+   "Export": {
+    "Name": "users-dev-stack-users-table"
+   }
+  },
+  "IdempotencyTableName": {
+   "Description": "Idempotency DynamoDB table name",
+   "Value": {
+    "Ref": "TablesIdempotencyTable9CFEB1A0"
+   },
+   "Export": {
+    "Name": "users-dev-stack-idempotency-table"
+   }
+  },
+  "EventBusName": {
+   "Description": "User Management audit event bus name",
+   "Value": {
+    "Ref": "EventBusUserAuditEventBus5BF0A895"
+   },
+   "Export": {
+    "Name": "users-dev-stack-event-bus"
+   }
+  },
+  "EventBusArn": {
+   "Description": "User Management audit event bus ARN",
+   "Value": {
+    "Fn::GetAtt": [
+     "EventBusUserAuditEventBus5BF0A895",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "users-dev-stack-event-bus-arn"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}
